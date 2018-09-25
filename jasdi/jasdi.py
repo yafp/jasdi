@@ -1,13 +1,16 @@
 #!/usr/bin/env python
-"""main script of DirectoryIndexer."""
+"""main script of jasdi."""
 
 # ------------------------------------------------------------------------------
 # IMPORTS
 # ------------------------------------------------------------------------------
 from __future__ import print_function
-import os
-import datetime
-import wx
+import os  # to walk directories
+import datetime  # to generate timestamps
+import webbrowser  # for opening urls
+import wx  # wxpython
+
+# from . import helpers
 
 
 # ------------------------------------------------------------------------------
@@ -34,12 +37,12 @@ class DirectoryIndexer(wx.Frame):
 
     def __init__(self, parent, title):
         """Init the app."""
-        super(DirectoryIndexer, self).__init__(parent, title=title, size=(640, 580))
+        super(DirectoryIndexer, self).__init__(parent, title=title, size=(480, 620))
 
         self.SetMinSize(self.GetSize())
 
         # define window icon
-        icon_path = 'assets/logo.png'
+        icon_path = '../assets/logo.ico'
         self.SetIcon(wx.Icon(icon_path))
 
         self.init_ui()
@@ -48,26 +51,26 @@ class DirectoryIndexer(wx.Frame):
 
 
     def init_ui(self):
-        """Initializing the UI."""
-        p = wx.Panel(self)
+        """Initialize the UI."""
+        # p = wx.Panel(self)
 
-        self.SetSizeHintsSz(wx.Size(640, 580), wx.DefaultSize)
+        self.SetSizeHintsSz(wx.Size(480, 620), wx.DefaultSize)
 
         # menubar
         #
         self.menubar = wx.MenuBar(0)
         # menu: file
-        self.menuFile = wx.Menu()
-        self.menuItem_exit = wx.MenuItem(self.menuFile, wx.ID_ANY, u"Exit", wx.EmptyString, wx.ITEM_NORMAL)
-        self.menuFile.AppendItem(self.menuItem_exit)
-        self.menubar.Append(self.menuFile, u"File")
+        self.menu_file = wx.Menu()
+        self.menuitem_exit = wx.MenuItem(self.menu_file, wx.ID_ANY, u"Exit", wx.EmptyString, wx.ITEM_NORMAL)
+        self.menu_file.AppendItem(self.menuitem_exit)
+        self.menubar.Append(self.menu_file, u"File")
         # menu: help
-        self.menuHelp = wx.Menu()
-        self.menuItem_about = wx.MenuItem(self.menuHelp, wx.ID_ANY, u"About", wx.EmptyString, wx.ITEM_NORMAL)
-        self.menuHelp.AppendItem(self.menuItem_about)
-        self.menuItem_doc = wx.MenuItem(self.menuHelp, wx.ID_ANY, u"Documentation", wx.EmptyString, wx.ITEM_NORMAL)
-        self.menuHelp.AppendItem(self.menuItem_doc)
-        self.menubar.Append(self.menuHelp, u"Help")
+        self.menu_help = wx.Menu()
+        self.menuitem_about = wx.MenuItem(self.menu_help, wx.ID_ANY, u"About", wx.EmptyString, wx.ITEM_NORMAL)
+        self.menu_help.AppendItem(self.menuitem_about)
+        self.menuitem_doc = wx.MenuItem(self.menu_help, wx.ID_ANY, u"Documentation", wx.EmptyString, wx.ITEM_NORMAL)
+        self.menu_help.AppendItem(self.menuitem_doc)
+        self.menubar.Append(self.menu_help, u"Help")
 
         self.SetMenuBar(self.menubar)
 
@@ -77,59 +80,54 @@ class DirectoryIndexer(wx.Frame):
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)  # sizer for row 2
         sizer_3 = wx.BoxSizer(wx.HORIZONTAL)  # sizer for row 3
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)  # sizer for row 4
+        sizer_5 = wx.BoxSizer(wx.HORIZONTAL)  # sizer for row 4
 
         # Source: Label
-        self.staticText_source = wx.StaticText(self, wx.ID_ANY, u"Source", wx.DefaultPosition, wx.DefaultSize, 0)
-        self.staticText_source.SetForegroundColour('gray')
-        self.staticText_source.Wrap(-1)
-        #sizer_1.AddSpacer((0, 0), 1, wx.EXPAND, 5)
-        sizer_1.Add(self.staticText_source, 0, wx.ALL, 20)
+        self.statictext_source = wx.StaticText(self, wx.ID_ANY, u"Source", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.statictext_source.SetForegroundColour('gray')
+        self.statictext_source.Wrap(-1)
+        sizer_1.Add(self.statictext_source, 0, wx.ALL, 20)
 
         # Source: dir picker
-        self.dirPicker_source = wx.DirPickerCtrl(self, wx.ID_ANY, wx.EmptyString, u"Select a source folder", wx.Point(0, 0), wx.DefaultSize, wx.DIRP_DEFAULT_STYLE | wx.DIRP_DIR_MUST_EXIST)
-        self.dirPicker_source.SetToolTipString(u"Select the source folder here")
-        sizer_1.Add(self.dirPicker_source, 0, wx.ALL, 20)
-        #sizer_1.AddSpacer((0, 0), 1, wx.EXPAND, 5)
+        self.dirpicker_source = wx.DirPickerCtrl(self, wx.ID_ANY, wx.EmptyString, u"Select a source folder", wx.Point(0, 0), wx.DefaultSize, wx.DIRP_DEFAULT_STYLE | wx.DIRP_DIR_MUST_EXIST)
+        self.dirpicker_source.SetToolTipString(u"Select the source folder here")
+        sizer_1.Add(self.dirpicker_source, 0, wx.ALL | wx.EXPAND, 20)
 
         # Target: label
-        self.staticText_target = wx.StaticText(self, wx.ID_ANY, u"Target", wx.DefaultPosition, wx.DefaultSize, 0)
-        self.staticText_target.SetForegroundColour('gray')
-        self.staticText_target.Wrap(-1)
-        #sizer_2.AddSpacer((0, 0), 1, wx.EXPAND, 5)
-        sizer_2.Add(self.staticText_target, 0, wx.ALL, 20)
+        self.statictext_target = wx.StaticText(self, wx.ID_ANY, u"Target", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.statictext_target.SetForegroundColour('gray')
+        self.statictext_target.Wrap(-1)
+        sizer_2.Add(self.statictext_target, 0, wx.ALL, 20)
 
         # Target: dir picker
-        self.dirPicker_target = wx.DirPickerCtrl(self, wx.ID_ANY, wx.EmptyString, u"Select a target folder", wx.Point(1, 0), wx.DefaultSize, wx.DIRP_DEFAULT_STYLE|wx.DIRP_DIR_MUST_EXIST)
-        self.dirPicker_target.SetToolTipString(u"Select the target folder here")
-        sizer_2.Add(self.dirPicker_target, 0, wx.ALL, 20)
-        #sizer_2.AddSpacer((0, 0), 1, wx.EXPAND, 5)
+        self.dirpicker_target = wx.DirPickerCtrl(self, wx.ID_ANY, wx.EmptyString, u"Select a target folder", wx.Point(1, 0), wx.DefaultSize, wx.DIRP_DEFAULT_STYLE | wx.DIRP_DIR_MUST_EXIST)
+        self.dirpicker_target.SetToolTipString(u"Select the target folder here")
+        sizer_2.Add(self.dirpicker_target, 0, wx.ALL, 20)
 
         # Button: start
         self.button_start = wx.Button(self, wx.ID_ANY, u"Start", wx.DefaultPosition, wx.DefaultSize, 0)
-        #sizer_3.AddSpacer((0, 0), 1, wx.EXPAND, 5)
         sizer_3.Add(self.button_start, -1, wx.ALL, 20)  # -1 for width
-        #sizer_3.AddSpacer((0, 0), 1, wx.EXPAND, 5)
 
         # log
-        #self.m_textCtrl1 = wx.TextCtrl(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY)
-        self.m_textCtrl1 = wx.TextCtrl(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size(100,200), wx.TE_MULTILINE|wx.TE_READONLY)
-        #sizer_4.AddSpacer((0, 0), 1, wx.EXPAND, 5)
-        #self.m_textCtrl1.SetMinSize(100,200)
-        #self.m_textCtrl1.SetMaxSize(100,200)
-        sizer_4.Add(self.m_textCtrl1, -1, wx.ALL, 20)  # -1 for width
-        #sizer_4.AddSpacer((0, 0), 1, wx.EXPAND, 5)
+        self.textctrl_log = wx.TextCtrl(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size(100, 200), wx.TE_MULTILINE | wx.TE_READONLY)
+        sizer_4.Add(self.textctrl_log, -1, wx.ALL, 20)  # -1 for width
 
+        # checkbox
+        self.cb_open_result = wx.CheckBox(self, label='Open index after generation', pos=(20, 20))
+        self.cb_open_result.SetValue(True)
+        sizer_5.Add(self.cb_open_result, -1, wx.ALL, 20)  # -1 for width
 
         # Statusbar
-        self.m_statusBar1 = self.CreateStatusBar(1, wx.ST_SIZEGRIP, wx.ID_ANY )
-        self.m_statusBar1.SetForegroundColour('gray')
-        self.m_statusBar1.SetStatusText('Ready')
+        self.statusbar_main = self.CreateStatusBar(1, wx.ST_SIZEGRIP, wx.ID_ANY)
+        self.statusbar_main.SetForegroundColour('gray')
+        self.statusbar_main.SetStatusText('Ready')
 
         # Add all sizers to main sizer
-        sizer_main.Add(sizer_1, 0, wx.ALL | wx.ALIGN_CENTER, 5)
-        sizer_main.Add(sizer_2, 0, wx.ALL | wx.ALIGN_CENTER, 5)
-        sizer_main.Add(sizer_3, 0, wx.EXPAND, 5)
-        sizer_main.Add(sizer_4, 0, wx.EXPAND, 5)
+        sizer_main.Add(sizer_1, 0, wx.ALL | wx.ALIGN_CENTER, 0)
+        sizer_main.Add(sizer_2, 0, wx.ALL | wx.ALIGN_CENTER, 0)
+        sizer_main.Add(sizer_3, 0, wx.EXPAND, 0)
+        sizer_main.Add(sizer_4, 0, wx.EXPAND, 0)
+        sizer_main.Add(sizer_5, 0, wx.EXPAND, 0)
 
         # Set the main sizer
         self.SetAutoLayout(True)
@@ -137,31 +135,30 @@ class DirectoryIndexer(wx.Frame):
         self.Layout()
 
         # Connect Events
-        self.Bind(wx.EVT_MENU, self.on_exit, id=self.menuItem_exit.GetId())
-        self.Bind(wx.EVT_MENU, self.on_about, id=self.menuItem_about.GetId())
-        self.Bind(wx.EVT_MENU, self.on_doc, id=self.menuItem_doc.GetId())
+        self.Bind(wx.EVT_MENU, self.on_exit, id=self.menuitem_exit.GetId())
+        self.Bind(wx.EVT_MENU, self.on_about, id=self.menuitem_about.GetId())
+        self.Bind(wx.EVT_MENU, self.on_doc, id=self.menuitem_doc.GetId())
         self.button_start.Bind(wx.EVT_BUTTON, self.on_start)
 
 
     def on_exit(self, event):
-        """Closing the application."""
+        """Close the application."""
         self.Close()
 
 
     def on_about(self, event):
         """Handle menu click on_about."""
-        print("Show about window event")
         info = wx.AboutDialogInfo()
         info.Name = APP_NAME
         info.Version = VERSION
         # info.Copyright = "(C) 2008 Python Geeks Everywhere"
         info.Description = (
-            "Just a simple directory indexer.\n"
+            "Just a simple directory indexer.\n\n"
             "Gets a source directory and generates a browseable html index for the entire content"
             )
         info.WebSite = (APP_URL, APP_URL_SHORT)
         info.Developers = AUTHOR,
-        # info.License = ("Completely and totally open source", 500)
+        info.License = ("GPL3")
 
         # Show the wx.AboutBox
         wx.AboutBox(info)
@@ -169,8 +166,9 @@ class DirectoryIndexer(wx.Frame):
 
     def on_doc(self, event):
         """Open online documentation."""
-        print("Open online docs")
-        webbrowser.open(APP_URL, new=0, autoraise=True)
+        alink = APP_URL
+        new = 2
+        webbrowser.open(alink, new=new)
 
 
     def on_start(self, event):
@@ -179,7 +177,7 @@ class DirectoryIndexer(wx.Frame):
 
 
     def get_size(self, start_path='.'):
-        """Get size of folder"""
+        """Get size of folder."""
         total_size = 0
         for dirpath, dirnames, filenames in os.walk(start_path):
             for f in filenames:
@@ -200,88 +198,82 @@ class DirectoryIndexer(wx.Frame):
 
 
     def get_file_type_icon(self, extension):
-        """Gets a file extension and returns an font awesome icon code"""
-        if(any(extension in item for item in [".txt"])):  # txt
+        """Get a file extension and return a FontAwesome icon code."""
+        if any(extension in item for item in [".txt"]):  # txt
             icon_code = "<i class='fas fa-file-alt'></i>"
-        elif(any(extension in item for item in [".zip", ".7z"])):  # archive
+        elif any(extension in item for item in [".h", ".cpp"]):  # code
+            icon_code = "<i class='fas fa-file-code'></i>"
+        elif any(extension in item for item in [".zip", ".7z"]):  # archive
             icon_code = "<i class='fas fa-file-archive'></i>"
-        elif(any(extension in item for item in [".png", ".jpg"])):  # image
+        elif any(extension in item for item in [".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".svg"]):  # image
             icon_code = "<i class='fas fa-file-image'></i>"
-        elif(any(extension in item for item in [".mp3", ".ogg"])):  # audio
+        elif any(extension in item for item in [".mp3", ".ogg", ".wav", ".aiff", "aac", ".wma", ".flac"]):  # audio
             icon_code = "<i class='fas fa-file-audio'></i>"
-        elif(any(extension in item for item in [".mpg", ".avi"])):  # video
+        elif any(extension in item for item in [".mpg", ".avi", ".webm", ".mkv", ".vob", ".mts", ".m2ts", ".wmv", ".mp4", ".mpeg", ".flv"]):  # video
             icon_code = "<i class='fas fa-file-video'></i>"
-        elif(extension == ".pdf"):  # pdf
+        elif extension == ".pdf":  # pdf
             icon_code = "<i class='fas fa-file-pdf'></i>"
-        elif(any(extension in item for item in [".doc", ".docx"])):  # doc
+        elif any(extension in item for item in [".doc", ".docx"]):  # doc
             icon_code = "<i class='fas fa-file-word'></i>"
-        elif(any(extension in item for item in [".xls", ".xlsx"])):  # excel
+        elif any(extension in item for item in [".xls", ".xlsx"]):  # excel
             icon_code = "<i class='fas fa-file-excel'></i>"
-        else:
+        elif any(extension in item for item in [".ppt", ".pptx"]):  # powerpoint
+            icon_code = "<i class='fas fa-file-powerpoint'></i>"
+        else:  # default
             icon_code = "<i class='fas fa-file'></i>"
-
-        return icon_code    # Virtual event handlers, overide them in your derived class
-
+        return icon_code
 
 
     def append_text_to_ui_log(self, text):
         """Append text to UI log."""
-        self.m_textCtrl1.AppendText(text)
+        self.textctrl_log.AppendText(text)
 
 
     def validate_user_input(self):
         """Validate the user input before starting the indexing."""
         # source
-        source_path = self.dirPicker_source.GetPath()
-        if(source_path == ""):
+        source_path = self.dirpicker_source.GetPath()
+        if source_path == "":
             # display error dialog
             message = "Please define a source directory and try again."
             caption = "Error: missing source"
-            # FIXME
-            # dlg = wx.MessageDialog(self, message, caption, wx.OK | wx.ICON_ERROR)
-            # dlg.ShowModal()
-            # sdlg.Destroy()
+            dlg = wx.MessageDialog(self, message, caption, wx.OK | wx.ICON_ERROR)
+            dlg.ShowModal()
+            dlg.Destroy()
             print(caption)
         else:
             print("Source: " + source_path)
 
-
         # target
-        target_path = self.dirPicker_target.GetPath()
-        if(target_path == ""):
+        target_path = self.dirpicker_target.GetPath()
+        if target_path == "":
             # display error dialog
             message = "Please define a target directory and try again."
             caption = "Error: missing target"
-            # FIXME
-            # dlg = wx.MessageDialog(self, message, caption, wx.OK | wx.ICON_ERROR)
-            # dlg.ShowModal()
-            # dlg.Destroy()
+            dlg = wx.MessageDialog(self, message, caption, wx.OK | wx.ICON_ERROR)
+            dlg.ShowModal()
+            dlg.Destroy()
             print(caption)
         else:
             print("Target: " + target_path)
 
-        # FIXME
-        source_path = "/home/fpoeck/Desktop/source"
-        target_path = "/home/fpoeck/Desktop/target"
-
         if(source_path != "") and (target_path != ""):
             # source_path: add trailing / if needed
-            if(source_path.endswith("/")):
+            if source_path.endswith("/"):
                 print("source_path ok")
             else:
                 source_path = source_path + "/"
 
             # target_path: add trailing / if needed
-            if(target_path.endswith("/")):
+            if target_path.endswith("/"):
                 print("target path ok")
             else:
                 target_path = target_path + "/"
 
-            # FIXME:
-            # adjust target_path
+            # adjust target_path to be date-specific
             timestamp = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
-            # target_path = target_path + timestamp + "/"
-            # os.mkdir(target_path)  # create target path directory
+            target_path = target_path + timestamp + "/"
+            os.mkdir(target_path)  # create target path directory
 
             # start index generation
             self.start_indexing(source_path, target_path)
@@ -290,7 +282,7 @@ class DirectoryIndexer(wx.Frame):
     def start_indexing(self, source_path, target_path):
         """Start the indexing process."""
         # update statusbar
-        self.m_statusBar1.SetStatusText('Started index generation')
+        self.statusbar_main.SetStatusText('Started index generation')
 
         # disable the start button
         self.button_start.Disable()
@@ -311,10 +303,16 @@ class DirectoryIndexer(wx.Frame):
         print("\n" + message)
 
         # update statusbar
-        self.m_statusBar1.SetStatusText(message)
+        self.statusbar_main.SetStatusText(message)
 
         # update log
         self.append_text_to_ui_log(message + "\n")
+
+        # open result if checkbox is True
+        if self.cb_open_result.GetValue() is True:
+            alink = target_path + "index.html"
+            new = 2
+            webbrowser.open(alink, new=new)
 
 
     def make_single_index(self, current_path, target_path):
@@ -325,7 +323,7 @@ class DirectoryIndexer(wx.Frame):
         self.append_text_to_ui_log("Processing: " + current_path)
 
         # update statusbar
-        self.m_statusBar1.SetStatusText('Processing ' + current_path)
+        self.statusbar_main.SetStatusText('Processing ' + current_path)
 
         # create target file
         file = open(target_path + "index.html", "w")
@@ -433,9 +431,9 @@ class DirectoryIndexer(wx.Frame):
         </nav>
         '''
 
-        # adding a back link to upper dir for all subdir indexes
+        # adding a backlink to upper dir for all subdir indexes
         global child_dir
-        if(child_dir):
+        if child_dir is True:
             file.write("<a href='../index.html'><button type='button' class='btn btn-secondary'>Back</button></a><br><br>")
 
         file.write("<div id='content'>\n")
@@ -455,7 +453,7 @@ class DirectoryIndexer(wx.Frame):
         file.write("<tbody>\n")
 
         # create table row for each single sub-directories (as links)
-        if(cur_sub_directories):  # if the list contains items
+        if cur_sub_directories:  # if the list contains items
             for x in xrange(len(cur_sub_directories)):
                 file.write("<tr>")
                 file.write("<td><i class='fas fa-folder'></i></td>")  # typ
@@ -465,7 +463,7 @@ class DirectoryIndexer(wx.Frame):
                 file.write("</tr>\n")
 
         # create table row for each single file
-        if(cur_file_name):  # if the list contains items
+        if cur_file_name:  # if the list contains items
             for x in xrange(len(cur_file_name)):
                 # define font awesome icon for current filetype
                 icon_code = self.get_file_type_icon(cur_file_typs[x])
